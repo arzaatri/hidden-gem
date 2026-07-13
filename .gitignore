@@ -10,3 +10,5 @@ dbt_project/logs/
 dbt_project/.user.yml
 
 /dagster_home/
+
+.claude
