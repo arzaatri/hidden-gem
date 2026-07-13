@@ -1,0 +1,24 @@
+# DAGSTER_HOME config. Backs run/event-log/schedule storage with Postgres (the
+# `dagster` schema — see docker/postgres-init/01-schemas.sql) instead of local
+# files, so run history and schedule state survive container recreation and
+# machine restarts. DAGSTER_PG_URL is set in docker-compose.yml.
+run_storage:
+  module: dagster_postgres.run_storage
+  class: PostgresRunStorage
+  config:
+    postgres_url:
+      env: DAGSTER_PG_URL
+
+event_log_storage:
+  module: dagster_postgres.event_log
+  class: PostgresEventLogStorage
+  config:
+    postgres_url:
+      env: DAGSTER_PG_URL
+
+schedule_storage:
+  module: dagster_postgres.schedule_storage
+  class: PostgresScheduleStorage
+  config:
+    postgres_url:
+      env: DAGSTER_PG_URL

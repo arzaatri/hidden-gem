@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec *)",
+      "Bash(uv sync *)",
+      "Bash(sed -i 's/host: \"postgres\"/host: \"localhost\"/' config/settings.yaml)",
+      "Bash(sed -i 's/endpoint: \"minio:9000\"/endpoint: \"localhost:9000\"/' config/settings.yaml)",
+      "Bash(uv run *)",
+      "Bash(sed -i 's/host: \"localhost\"/host: \"postgres\"/' config/settings.yaml)",
+      "Bash(sed -i 's/endpoint: \"localhost:9000\"/endpoint: \"minio:9000\"/' config/settings.yaml)",
+      "Bash(MINIO_ROOT_USER=minioadmin MINIO_ROOT_PASSWORD=minioadmin MINIO_ENDPOINT=localhost:9000 POSTGRES_USER=hidden_gem POSTGRES_PASSWORD=hidden_gem POSTGRES_DB=hidden_gem POSTGRES_HOST=localhost uv run --package orchestration dbt build --project-dir dbt_project --profiles-dir dbt_project)",
+      "Bash(MINIO_ROOT_USER=minioadmin MINIO_ROOT_PASSWORD=minioadmin MINIO_ENDPOINT=localhost:9000 POSTGRES_USER=hidden_gem POSTGRES_PASSWORD=hidden_gem POSTGRES_DB=hidden_gem POSTGRES_HOST=localhost uv run --package orchestration dbt build --project-dir dbt_project --profiles-dir dbt_project --full-refresh)",
+      "Bash(uv build *)",
+      "Bash(unzip -l /tmp/wheelout/*.whl)",
+      "Read(//tmp/wheelout/**)",
+      "Bash(python3 -c \"import zipfile; z=zipfile.ZipFile\\([f for f in __import__\\('os'\\).listdir\\('.'\\) if f.endswith\\('.whl'\\)][0]\\); [print\\(n\\) for n in z.namelist\\(\\)]\")",
+      "Bash(uv pip *)",
+      "Bash(uv lock *)",
+      "Bash(curl -s http://localhost:3000/server_info)",
+      "Bash(curl -s http://localhost:3000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ runsOrError\\(limit:5\\) { ... on Runs { results { runId status jobName startTime endTime } } } }\"}')",
+      "Bash(curl -s http://localhost:3000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ runsOrError\\(limit:2\\) { ... on Runs { results { runId status jobName } } } }\"}')",
+      "Bash(curl -s http://localhost:3000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ instanceState { hasInfo } scheduleOrError\\(scheduleSelector:{repositoryName:\\\\\"__repository__\\\\\", repositoryLocationName:\\\\\"orchestration.definitions\\\\\", scheduleName:\\\\\"daily_hidden_gem_sync_schedule\\\\\"}\\) { ... on Schedule { name cronSchedule scheduleState { status } } } }\"}')",
+      "Bash(curl -s http://localhost:3000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ repositoriesOrError { ... on RepositoryConnection { nodes { name schedules { name cronSchedule scheduleState { status } } } } } }\"}')",
+      "Bash(curl -s http://localhost:3000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ repositoriesOrError { ... on RepositoryConnection { nodes { schedules { name cronSchedule scheduleState { status } } } } } }\"}')",
+      "Bash(curl -s http://localhost:3000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ runsOrError\\(limit:5\\) { ... on Runs { results { runId status jobName } } } }\"}')",
+      "Bash(curl -s http://localhost:3000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ repositoriesOrError { ... on RepositoryConnection { nodes { schedules { name scheduleState { status } } } } } }\"}')",
+      "Bash(curl -s http://localhost:8000/api/config)",
+      "Bash(curl -s \"http://localhost:8000/api/games/search?q=elder&limit=5\")",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl -s -X POST http://localhost:8000/api/recommend -H 'Content-Type: application/json' -d '{\"game_ids\": [52, 53]}')",
+      "Bash(curl -s -i -X POST http://localhost:8000/api/recommend -H 'Content-Type: application/json' -d '{\"game_ids\": [52, 53]}')",
+      "Bash(curl -s -X POST http://localhost:8000/api/recommend -H 'Content-Type: application/json' -d '{\"game_ids\": [1,2,3,4,5,6]}')",
+      "Bash(curl -s -X POST http://localhost:8000/api/recommend -H 'Content-Type: application/json' -d '{\"game_ids\": [999999]}')",
+      "Bash(curl -s \"http://localhost:8000/api/games/search?q=zzzznonexistent\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{content_type}\\\\n\" http://localhost:8000/app.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{content_type}\\\\n\" http://localhost:8000/style.css)"
+    ]
+  }
+}

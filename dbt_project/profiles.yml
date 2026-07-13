@@ -1,0 +1,22 @@
+hidden_gem:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: /tmp/hidden_gem.duckdb # local scratch file — not the source of truth, safe to delete
+      extensions:
+        - httpfs
+        - parquet
+        - postgres
+      secrets:
+        - type: s3
+          key_id: "{{ env_var('MINIO_ROOT_USER') }}"
+          secret: "{{ env_var('MINIO_ROOT_PASSWORD') }}"
+          region: "us-east-1" # required by the S3 API surface; MinIO ignores the value
+          endpoint: "{{ env_var('MINIO_ENDPOINT', 'minio:9000') }}"
+          url_style: "path" # required for MinIO (vs. AWS's vhost-style)
+          use_ssl: false
+      attach:
+        - path: "postgresql://{{ env_var('POSTGRES_USER') }}:{{ env_var('POSTGRES_PASSWORD') }}@{{ env_var('POSTGRES_HOST', 'postgres') }}:5432/{{ env_var('POSTGRES_DB') }}"
+          type: postgres
+          alias: gold_db

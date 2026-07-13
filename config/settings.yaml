@@ -1,0 +1,51 @@
+# Non-secret, tunable configuration. Secrets (credentials) live in .env instead.
+
+etl:
+  # Cap on games pulled per run. Keep small for local dev/testing; raise for a real run.
+  max_games: 100
+  # A game is flagged as a "hidden gem" in the gold layer when its aggregated
+  # rating count is below this threshold.
+  hidden_gem_rating_count_threshold: 20
+  # Daily refresh schedule (cron), used by the Dagster schedule.
+  schedule_cron: "0 6 * * *"
+
+recommendation:
+  # Number of hidden gems GemFinder returns per request.
+  hidden_gem_count: 2
+  # Max games a user can select as input to "Mine for gems".
+  max_selected_games: 5
+
+minio:
+  endpoint: "minio:9000" # host:port, no scheme — resolved inside the docker network
+  bucket: "hidden-game"
+  bronze_prefix: "bronze"
+  silver_prefix: "silver"
+  use_ssl: false
+
+postgres:
+  host: "postgres"
+  port: 5432
+  gold_schema: "gold"
+  etl_state_schema: "etl_state"
+  dagster_schema: "dagster"
+
+igdb:
+  api_base_url: "https://api.igdb.com/v4"
+  auth_url: "https://id.twitch.tv/oauth2/token"
+  # Field list requested from the /games endpoint (Apicalypse).
+  fields:
+    - name
+    - rating
+    - aggregated_rating
+    - aggregated_rating_count
+    - follows
+    - hypes
+    - genres.name
+    - themes.name
+    - keywords.name
+    - summary
+    - storyline
+    - screenshots.url
+    - updated_at
+  page_size: 500 # IGDB max per request
+  requests_per_second: 4 # IGDB rate limit

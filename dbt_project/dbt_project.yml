@@ -1,0 +1,22 @@
+name: "hidden_gem"
+version: "1.0.0"
+profile: "hidden_gem"
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target"]
+
+vars:
+  # Default threshold for the gold `hidden_gem` flag. The Dagster pipeline
+  # overrides this from config/settings.yaml at runtime so there's one source
+  # of truth; this default just lets `dbt build` work standalone.
+  hidden_gem_rating_count_threshold: 20
+
+models:
+  hidden_gem:
+    staging:
+      +materialized: view
+    silver:
+      +materialized: external
+    gold:
+      +materialized: table

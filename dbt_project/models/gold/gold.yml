@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: dim_games
+    columns:
+      - name: game_id
+        tests: [not_null, unique]
+      - name: hidden_gem
+        tests: [not_null]

@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: bronze
+    meta:
+      # union_by_name handles schema drift across files; extraction itself
+      # guarantees every field key is present (nulled if absent) on every
+      # record, so a batch where e.g. no game has "follows" still parses
+      # with that column intact (see extraction/igdb_client.py).
+      external_location: "read_json_auto('s3://hidden-game/bronze/*.json', format='newline_delimited', union_by_name=true)"
+    tables:
+      - name: raw_games
+        description: "Raw, denormalized IGDB game records, one JSON line per game."
+        meta:
+          dagster:
+            asset_key: ["bronze", "raw_games"]

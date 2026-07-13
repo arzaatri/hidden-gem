@@ -1,0 +1,86 @@
+version: 2
+
+models:
+  - name: games
+    columns:
+      - name: game_id
+        tests: [not_null, unique]
+      - name: name
+        tests: [not_null]
+
+  - name: genres
+    columns:
+      - name: genre_id
+        tests: [not_null, unique]
+      - name: genre_name
+        tests: [not_null]
+
+  - name: themes
+    columns:
+      - name: theme_id
+        tests: [not_null, unique]
+      - name: theme_name
+        tests: [not_null]
+
+  - name: keywords
+    columns:
+      - name: keyword_id
+        tests: [not_null, unique]
+      - name: keyword_name
+        tests: [not_null]
+
+  - name: screenshots
+    columns:
+      - name: screenshot_id
+        tests: [not_null, unique]
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('games')
+              field: game_id
+
+  - name: game_genres
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('games')
+              field: game_id
+      - name: genre_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('genres')
+              field: genre_id
+
+  - name: game_themes
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('games')
+              field: game_id
+      - name: theme_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('themes')
+              field: theme_id
+
+  - name: game_keywords
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('games')
+              field: game_id
+      - name: keyword_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('keywords')
+              field: keyword_id
