@@ -10,5 +10,7 @@ select
     hypes,
     summary,
     storyline,
+    cover_image_id,
+    first_release_date,
     updated_at
 from {{ ref('stg_games') }}

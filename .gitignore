@@ -12,3 +12,8 @@ dbt_project/.user.yml
 /dagster_home/
 
 .claude
+
+TODO.txt
+
+logs/*
+!logs/.gitkeep

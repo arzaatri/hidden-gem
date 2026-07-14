@@ -46,7 +46,7 @@ def recommend(request: RecommendRequest) -> list[Game]:
     if missing_ids:
         raise HTTPException(404, f"Unknown game id(s): {sorted(missing_ids)}")
 
-    return gem_finder.recommend(games)
+    return gem_finder.recommend(games, request.hidden_gems_only)
 
 
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

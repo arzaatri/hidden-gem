@@ -31,6 +31,8 @@ select
     games.hypes,
     games.summary,
     games.storyline,
+    games.cover_image_id,
+    games.first_release_date,
     games.updated_at,
     coalesce(genre_agg.genres, []) as genres,
     coalesce(theme_agg.themes, []) as themes,

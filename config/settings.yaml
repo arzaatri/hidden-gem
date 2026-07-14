@@ -46,6 +46,8 @@ igdb:
     - summary
     - storyline
     - screenshots.url
+    - cover.image_id
+    - first_release_date
     - updated_at
   page_size: 500 # IGDB max per request
   requests_per_second: 4 # IGDB rate limit

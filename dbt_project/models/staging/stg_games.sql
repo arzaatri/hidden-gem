@@ -15,6 +15,8 @@ select
     summary,
     storyline,
     screenshots,
+    cover.image_id as cover_image_id,
+    to_timestamp(first_release_date) as first_release_date,
     to_timestamp(updated_at) as updated_at
 from {{ source('bronze', 'raw_games') }}
 qualify row_number() over (partition by id order by updated_at desc) = 1

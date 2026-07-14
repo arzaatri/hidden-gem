@@ -13,6 +13,8 @@ class GameSummary(BaseModel):
     game_id: int
     name: str
     genres: list[str]
+    cover_image_id: str | None
+    first_release_date: datetime | None
 
 
 class Game(BaseModel):
@@ -27,6 +29,8 @@ class Game(BaseModel):
     hypes: int | None
     summary: str | None
     storyline: str | None
+    cover_image_id: str | None
+    first_release_date: datetime | None
     updated_at: datetime
     genres: list[str]
     themes: list[str]
@@ -36,3 +40,4 @@ class Game(BaseModel):
 
 class RecommendRequest(BaseModel):
     game_ids: list[int] = Field(min_length=1)
+    hidden_gems_only: bool = True

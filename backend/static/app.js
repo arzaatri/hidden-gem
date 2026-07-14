@@ -2,11 +2,21 @@ const searchInput = document.getElementById("search-input");
 const suggestionsList = document.getElementById("suggestions");
 const selectedList = document.getElementById("selected-games");
 const mineButton = document.getElementById("mine-button");
+const hiddenGemsOnlyCheckbox = document.getElementById("hidden-gems-only");
 const resultsSection = document.getElementById("results");
 
 let maxSelectedGames = 5;
 let selectedGames = [];
 let searchDebounceTimer = null;
+
+function igdbCoverUrl(imageId, size) {
+  if (!imageId) return null;
+  return `https://images.igdb.com/igdb/image/upload/t_${size}/${encodeURIComponent(imageId)}.jpg`;
+}
+
+function releaseYear(isoDate) {
+  return isoDate ? new Date(isoDate).getFullYear() : null;
+}
 
 async function loadConfig() {
   const response = await fetch("/api/config");
@@ -31,7 +41,22 @@ function renderSuggestions(games) {
 
   for (const game of unselected) {
     const item = document.createElement("li");
-    item.textContent = game.name;
+    item.className = "suggestion";
+
+    const coverUrl = igdbCoverUrl(game.cover_image_id, "cover_small");
+    if (coverUrl) {
+      const cover = document.createElement("img");
+      cover.className = "cover-thumb";
+      cover.src = coverUrl;
+      cover.alt = "";
+      item.appendChild(cover);
+    }
+
+    const label = document.createElement("span");
+    const year = releaseYear(game.first_release_date);
+    label.textContent = year ? `${game.name} (${year})` : game.name;
+    item.appendChild(label);
+
     item.addEventListener("click", () => selectGame(game));
     suggestionsList.appendChild(item);
   }
@@ -81,11 +106,34 @@ function renderResults(games) {
   for (const game of games) {
     const card = document.createElement("article");
     card.className = "game-card";
-    card.innerHTML = `
-      <h3>${game.name}</h3>
-      <div class="genres">${game.genres.join(", ")}</div>
-      <p>${game.summary ?? ""}</p>
-    `;
+
+    const coverUrl = igdbCoverUrl(game.cover_image_id, "cover_big");
+    if (coverUrl) {
+      const cover = document.createElement("img");
+      cover.className = "cover-big";
+      cover.src = coverUrl;
+      cover.alt = "";
+      card.appendChild(cover);
+    }
+
+    const body = document.createElement("div");
+    body.className = "game-card-body";
+
+    const title = document.createElement("h3");
+    const year = releaseYear(game.first_release_date);
+    title.textContent = year ? `${game.name} (${year})` : game.name;
+    body.appendChild(title);
+
+    const genres = document.createElement("div");
+    genres.className = "genres";
+    genres.textContent = game.genres.join(", ");
+    body.appendChild(genres);
+
+    const summary = document.createElement("p");
+    summary.textContent = game.summary ?? "";
+    body.appendChild(summary);
+
+    card.appendChild(body);
     resultsSection.appendChild(card);
   }
 }
@@ -114,7 +162,10 @@ mineButton.addEventListener("click", async () => {
   const response = await fetch("/api/recommend", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ game_ids: selectedGames.map((g) => g.game_id) }),
+    body: JSON.stringify({
+      game_ids: selectedGames.map((g) => g.game_id),
+      hidden_gems_only: hiddenGemsOnlyCheckbox.checked,
+    }),
   });
   if (!response.ok) {
     const error = await response.json();

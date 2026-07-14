@@ -8,7 +8,7 @@ from psycopg.rows import dict_row
 from backend.models import Game, GameSummary
 
 _SEARCH_SQL = """
-    SELECT game_id, name, genres
+    SELECT game_id, name, genres, cover_image_id, first_release_date
     FROM gold.dim_games
     WHERE name ILIKE %(pattern)s
     ORDER BY name
@@ -17,9 +17,9 @@ _SEARCH_SQL = """
 
 _GET_BY_IDS_SQL = "SELECT * FROM gold.dim_games WHERE game_id = ANY(%(game_ids)s)"
 
-_HIDDEN_GEMS_BY_GENRE_SQL = """
+_GAMES_BY_GENRE_SQL = """
     SELECT * FROM gold.dim_games
-    WHERE hidden_gem
+    WHERE (NOT %(hidden_gems_only)s OR hidden_gem)
       AND genres::text[] && %(genres)s::text[]
       AND NOT (game_id = ANY(%(exclude_ids)s))
 """
@@ -41,10 +41,16 @@ class GameRepository:
             rows = conn.execute(_GET_BY_IDS_SQL, {"game_ids": game_ids}).fetchall()
         return [Game(**row) for row in rows]
 
-    def get_hidden_gems_by_genres(self, genres: set[str], exclude_ids: set[int]) -> list[Game]:
+    def get_games_by_genres(
+        self, genres: set[str], exclude_ids: set[int], hidden_gems_only: bool
+    ) -> list[Game]:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             rows = conn.execute(
-                _HIDDEN_GEMS_BY_GENRE_SQL,
-                {"genres": list(genres), "exclude_ids": list(exclude_ids)},
+                _GAMES_BY_GENRE_SQL,
+                {
+                    "genres": list(genres),
+                    "exclude_ids": list(exclude_ids),
+                    "hidden_gems_only": hidden_gems_only,
+                },
             ).fetchall()
         return [Game(**row) for row in rows]
