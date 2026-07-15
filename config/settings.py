@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_SETTINGS_YAML = Path(__file__).parent / "settings.yaml"
@@ -23,9 +23,30 @@ class EtlConfig(BaseModel):
     schedule_cron: str
 
 
+class ContentWeights(BaseModel):
+    """Flat weights for ContentBasedGemFinder's 7 similarity signals."""
+
+    genre: float
+    theme: float
+    keyword: float
+    summary: float
+    storyline: float
+    cover: float
+    screenshots: float
+
+    @model_validator(mode="after")
+    def _weights_sum_to_one(self) -> "ContentWeights":
+        total = sum(self.model_dump().values())
+        if abs(total - 1.0) > 1e-6:
+            raise ValueError(f"recommendation.weights must sum to 1, got {total}")
+        return self
+
+
 class RecommendationConfig(BaseModel):
     hidden_gem_count: int
     max_selected_games: int
+    rating_cutoff: int
+    weights: ContentWeights
 
 
 class MinioConfig(BaseModel):

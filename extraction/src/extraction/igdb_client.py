@@ -52,7 +52,7 @@ class IgdbClient:
                 f"limit {limit};\n"
                 f"offset {offset};"
             )
-            page = self._post(query)
+            page = self.raw_query("games", query)
             if not page:
                 break
             collected.extend(_with_all_fields(game, fields) for game in page)
@@ -62,11 +62,16 @@ class IgdbClient:
 
         return collected
 
-    def _post(self, query: str) -> list[dict[str, Any]]:
+    def raw_query(self, endpoint: str, query: str) -> list[dict[str, Any]]:
+        """Runs an arbitrary Apicalypse query against any IGDB endpoint.
+
+        `fetch_games` covers the production pull; this is the escape hatch
+        for ad hoc exploration (other endpoints, other fields).
+        """
         self._respect_rate_limit()
         token = self._token_provider.get_token()
         response = requests.post(
-            f"{self._igdb.api_base_url}/games",
+            f"{self._igdb.api_base_url}/{endpoint}",
             headers={
                 "Client-ID": self._token_provider.client_id,
                 "Authorization": f"Bearer {token}",

@@ -17,3 +17,7 @@ TODO.txt
 
 logs/*
 !logs/.gitkeep
+
+.ipynb_checkpoints/
+
+notebooks/*.ipynb

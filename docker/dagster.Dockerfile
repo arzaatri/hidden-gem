@@ -8,6 +8,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock* ./
 COPY config ./config
 COPY extraction ./extraction
+COPY embeddings ./embeddings
 COPY orchestration ./orchestration
 COPY dbt_project ./dbt_project
 

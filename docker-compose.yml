@@ -18,7 +18,7 @@ services:
       retries: 10
 
   postgres:
-    image: postgres:16
+    image: pgvector/pgvector:0.8.5-pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -53,6 +53,7 @@ services:
     volumes:
       - ./orchestration:/app/orchestration
       - ./extraction:/app/extraction
+      - ./embeddings:/app/embeddings
       - ./config:/app/config
       - ./dbt_project:/app/dbt_project
 

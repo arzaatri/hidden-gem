@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "hidden-gem-config",
     "extraction",
+    "embeddings",
     "dagster>=1.9",
     "dagster-webserver>=1.9",
     "dagster-postgres>=0.25",
@@ -24,6 +25,7 @@ packages = ["src/orchestration"]
 [tool.uv.sources]
 hidden-gem-config = { workspace = true }
 extraction = { workspace = true }
+embeddings = { workspace = true }
 
 [tool.dagster]
 module_name = "orchestration.definitions"

@@ -7,3 +7,15 @@ models:
         tests: [not_null, unique]
       - name: hidden_gem
         tests: [not_null]
+
+  - name: tag_idf
+    columns:
+      - name: tag_category
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["genre", "theme", "keyword"]
+      - name: tag_value
+        tests: [not_null]
+      - name: idf
+        tests: [not_null]

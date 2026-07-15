@@ -1,0 +1,18 @@
+[project]
+name = "notebooks"
+version = "0.1.0"
+description = "Exploratory notebooks (EDA, prototyping) — not part of any deployed service"
+requires-python = ">=3.12"
+dependencies = [
+    "hidden-gem-config",
+    "extraction",
+    "polars>=1.9",
+    "ipykernel>=6.29",
+]
+
+[tool.uv]
+package = false # no importable code of its own — just a dependency set for notebooks/
+
+[tool.uv.sources]
+hidden-gem-config = { workspace = true }
+extraction = { workspace = true }

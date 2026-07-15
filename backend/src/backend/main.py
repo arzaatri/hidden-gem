@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
 from backend.db import GameRepository
-from backend.gem_finder import GemFinder, MockGemFinder
+from backend.gem_finder import ContentBasedGemFinder, GemFinder
 from backend.models import Game, GameSummary, RecommendRequest
 from config.settings import load_settings
 
@@ -16,7 +16,12 @@ STATIC_DIR = Path(__file__).parent.parent.parent / "static"
 
 settings = load_settings()
 game_repository = GameRepository(settings.postgres_dsn())
-gem_finder: GemFinder = MockGemFinder(settings.recommendation.hidden_gem_count, game_repository)
+gem_finder: GemFinder = ContentBasedGemFinder(
+    settings.recommendation.hidden_gem_count,
+    settings.recommendation.rating_cutoff,
+    settings.recommendation.weights,
+    game_repository,
+)
 
 app = FastAPI(title="Hidden Gem API")
 

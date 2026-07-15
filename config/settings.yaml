@@ -14,6 +14,21 @@ recommendation:
   hidden_gem_count: 2
   # Max games a user can select as input to "Mine for gems".
   max_selected_games: 5
+  # Hard quality filter on aggregated_rating (critic score). Games below this
+  # are never recommended; null ratings pass (no critic reviews isn't the
+  # same as being panned).
+  rating_cutoff: 65
+  # Flat weights for ContentBasedGemFinder's 7 similarity signals — must sum
+  # to 1. Missing signals (e.g. no storyline) renormalize across whatever's
+  # available for that pair, rather than scoring the missing one as 0.
+  weights:
+    genre: 0.10
+    theme: 0.15
+    keyword: 0.25
+    summary: 0.20
+    storyline: 0.10
+    cover: 0.10
+    screenshots: 0.10
 
 minio:
   endpoint: "minio:9000" # host:port, no scheme — resolved inside the docker network
