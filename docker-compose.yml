@@ -56,6 +56,7 @@ services:
       - ./embeddings:/app/embeddings
       - ./config:/app/config
       - ./dbt_project:/app/dbt_project
+      - ./logs:/app/logs
 
   backend:
     build:
@@ -71,6 +72,7 @@ services:
     volumes:
       - ./backend:/app/backend
       - ./config:/app/config
+      - ./logs:/app/logs
 
 volumes:
   minio_data:

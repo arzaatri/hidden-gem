@@ -19,7 +19,7 @@ DEFAULT_ENV_FILE = Path(__file__).parent.parent / ".env"
 
 class EtlConfig(BaseModel):
     max_games: int
-    hidden_gem_rating_count_threshold: int
+    hidden_gem_rating_count_percentile: float
     schedule_cron: str
 
 

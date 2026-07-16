@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 import time
 
 import requests
 from pydantic import BaseModel
 
 from config.settings import IgdbConfig, Secrets
+
+logger = logging.getLogger(__name__)
 
 
 class AccessToken(BaseModel):
@@ -37,6 +40,7 @@ class IgdbTokenProvider:
         return self._cached.token
 
     def _fetch_token(self) -> AccessToken:
+        logger.info("Fetching a new IGDB access token")
         response = requests.post(
             self._igdb.auth_url,
             params={

@@ -2,10 +2,13 @@
 
 etl:
   # Cap on games pulled per run. Keep small for local dev/testing; raise for a real run.
-  max_games: 100
+  max_games: 1000
   # A game is flagged as a "hidden gem" in the gold layer when its aggregated
-  # rating count is below this threshold.
-  hidden_gem_rating_count_threshold: 20
+  # rating count falls below this percentile of all games' rating counts.
+  # Recomputed from the full dataset on every gold rebuild (dim_games is
+  # fully rebuilt each run), so it tracks the dataset's size/shape over time
+  # instead of drifting out of date like a fixed count would.
+  hidden_gem_rating_count_percentile: 10
   # Daily refresh schedule (cron), used by the Dagster schedule.
   schedule_cron: "0 6 * * *"
 

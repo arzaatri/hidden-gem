@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime
 from typing import Any
@@ -10,6 +11,8 @@ import requests
 
 from config.settings import IgdbConfig
 from extraction.igdb_auth import IgdbTokenProvider
+
+logger = logging.getLogger(__name__)
 
 # "id" isn't in the user-facing field list but is required to page deterministically
 # (sort id asc) and to give every bronze record a stable primary key.
@@ -57,6 +60,7 @@ class IgdbClient:
                 break
             collected.extend(_with_all_fields(game, fields) for game in page)
             offset += len(page)
+            logger.info("Fetched page at offset %d (%d games so far)", offset - len(page), len(collected))
             if len(page) < limit:
                 break  # last page was partial: no more results
 

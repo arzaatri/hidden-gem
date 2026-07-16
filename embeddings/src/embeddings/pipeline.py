@@ -80,14 +80,18 @@ def run_embeddings_pipeline(settings: Settings) -> EmbeddingsResult:
 
     games = get_games_needing_embeddings(dsn)
     if not games:
+        logger.info("No games need (re)embedding")
         return EmbeddingsResult(games_embedded=0)
 
+    logger.info("Embedding %d games", len(games))
     screenshot_urls = read_screenshot_urls(settings.minio, settings.secrets)
     text_embedder = TextEmbedder()
     image_embedder = ImageEmbedder()
 
-    for game in games:
+    for i, game in enumerate(games, start=1):
         vectors = _embed_game(game, screenshot_urls.get(game.game_id, []), text_embedder, image_embedder)
         upsert_embedding(dsn, vectors)
+        if i % 50 == 0 or i == len(games):
+            logger.info("Embedded %d/%d games", i, len(games))
 
     return EmbeddingsResult(games_embedded=len(games))

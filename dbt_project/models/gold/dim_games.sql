@@ -19,6 +19,15 @@ keyword_agg as (
     from {{ ref('game_keywords') }} gk
     join {{ ref('keywords') }} k using (keyword_id)
     group by gk.game_id
+),
+
+-- Recomputed from the full dataset every rebuild, so the hidden-gem cutoff
+-- tracks the current dataset's rating-count distribution instead of a fixed
+-- number that goes stale as the dataset grows.
+threshold as (
+    select percentile_cont({{ var('hidden_gem_rating_count_percentile') }} / 100.0)
+        within group (order by coalesce(aggregated_rating_count, 0)) as rating_count_cutoff
+    from {{ ref('games') }}
 )
 
 select
@@ -37,8 +46,9 @@ select
     coalesce(genre_agg.genres, []) as genres,
     coalesce(theme_agg.themes, []) as themes,
     coalesce(keyword_agg.keywords, []) as keywords,
-    coalesce(games.aggregated_rating_count, 0) < {{ var('hidden_gem_rating_count_threshold') }} as hidden_gem
+    coalesce(games.aggregated_rating_count, 0) <= threshold.rating_count_cutoff as hidden_gem
 from {{ ref('games') }} as games
 left join genre_agg on genre_agg.game_id = games.game_id
 left join theme_agg on theme_agg.game_id = games.game_id
 left join keyword_agg on keyword_agg.game_id = games.game_id
+cross join threshold

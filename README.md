@@ -76,14 +76,42 @@ least once first).
 ## Configuration
 
 - **Secrets** (`.env`): IGDB creds, MinIO/Postgres creds.
-- **Tunables** (`config/settings.yaml`): `etl.max_games` (capped at 100 for
-  local testing — raise it for a real run), `etl.hidden_gem_rating_count_threshold`
-  (the `n` behind the gold `hidden_gem` flag), bucket/schema names, the daily
-  cron schedule, `recommendation.hidden_gem_count` and
+- **Tunables** (`config/settings.yaml`): `etl.max_games` (how many games to
+  pull per run), `etl.hidden_gem_rating_count_percentile` (a game is a
+  "hidden gem" if its `aggregated_rating_count` falls below this percentile
+  of all games' rating counts — recomputed from the full dataset on every
+  gold rebuild, so it tracks the dataset as it grows instead of a fixed count
+  going stale), bucket/schema names, the daily cron schedule,
+  `recommendation.hidden_gem_count` and
   `recommendation.max_selected_games` (the web app's `N` and the 5-game cap),
   `recommendation.rating_cutoff` (hard quality filter on `aggregated_rating`;
   nulls pass), `recommendation.weights` (the 7 flat weights
   `ContentBasedGemFinder` combines its similarity signals with — must sum to 1).
+
+## Logging
+
+`config/logging_setup.py` has one shared `setup_logging(service, packages)`,
+called once near the top of each process entrypoint:
+`orchestration/definitions.py` calls `setup_logging("datapull", ["extraction",
+"embeddings"])` (Dagster runs both packages in one process), and
+`backend/main.py` calls `setup_logging("webapp", ["backend"])`. It only
+attaches handlers to those named top-level packages' loggers (not the root
+logger), so framework logging (Dagster, uvicorn) is left alone instead of
+being captured and reprinted in our format.
+
+Every log line looks like:
+
+```
+[2026-07-16 01:04:44.593][extraction.pipeline.run_extraction] Pulled 87 games
+```
+
+`[YYYY-MM-DD hh:mm:ss.sss][package.module.function]` — the middle section is
+just Python's standard dotted logger name (`logging.getLogger(__name__)`)
+plus the calling function name, so it falls out of the stdlib's own fields for
+free; no custom path-building code needed. Logs are written to both stdout
+(visible in `docker compose logs`) and a file per service:
+`logs/datapull/datapull.log`, `logs/webapp/webapp.log` — mounted as a volume
+in `docker-compose.yml` so they persist and are readable from the host.
 
 Both are loaded through `config/settings.py` (a single Pydantic `Settings`
 object) so there's one source of truth for both the Python extraction code and
