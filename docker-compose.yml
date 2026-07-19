@@ -54,6 +54,7 @@ services:
       - ./orchestration:/app/orchestration
       - ./extraction:/app/extraction
       - ./embeddings:/app/embeddings
+      - ./quality:/app/quality
       - ./config:/app/config
       - ./dbt_project:/app/dbt_project
       - ./logs:/app/logs

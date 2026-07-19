@@ -5,8 +5,13 @@ description = "Precomputes NLP/CV embeddings for games (summary, storyline, cove
 requires-python = ">=3.12"
 dependencies = [
     "hidden-gem-config",
-    "sentence-transformers>=3.2",
-    "transformers>=4.45",
+    # Upper-bounded: adding the `quality` package to the shared workspace lock
+    # nudged uv toward transformers 5.x, whose huggingface_hub 1.x dependency
+    # removed an API transformers itself still calls internally (verified
+    # broken import). Capping at <5 keeps this on the already-verified,
+    # working major version line.
+    "sentence-transformers>=3.2,<4",
+    "transformers>=4.45,<5",
     "torch>=2.4",
     "pillow>=10.4",
     "requests>=2.32",

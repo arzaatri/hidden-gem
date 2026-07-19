@@ -2,32 +2,22 @@
 
 Screenshots only live in silver (per the medallion layering — gold doesn't
 carry per-screenshot detail), so this reads MinIO directly rather than
-querying Postgres, mirroring extraction/bronze_writer.py's boto3 client setup.
+querying Postgres.
 """
 
 from __future__ import annotations
 
 import io
 
-import boto3
 import polars as pl
 
+from config.minio_client import s3_client
 from config.settings import MinioConfig, Secrets
-
-
-def _s3_client(minio: MinioConfig, secrets: Secrets):
-    scheme = "https" if minio.use_ssl else "http"
-    return boto3.client(
-        "s3",
-        endpoint_url=f"{scheme}://{minio.endpoint}",
-        aws_access_key_id=secrets.minio_root_user,
-        aws_secret_access_key=secrets.minio_root_password,
-    )
 
 
 def read_screenshot_urls(minio: MinioConfig, secrets: Secrets) -> dict[int, list[str]]:
     """Returns {game_id: [screenshot_url, ...]}."""
-    client = _s3_client(minio, secrets)
+    client = s3_client(minio, secrets)
     key = f"{minio.silver_prefix}/screenshots.parquet"
     body = client.get_object(Bucket=minio.bucket, Key=key)["Body"].read()
     df = pl.read_parquet(io.BytesIO(body))

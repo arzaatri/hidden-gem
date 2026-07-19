@@ -13,7 +13,7 @@ build-backend = "hatchling.build"
 packages = ["config"]
 
 [tool.uv.workspace]
-members = ["extraction", "orchestration", "backend", "notebooks", "embeddings"]
+members = ["extraction", "orchestration", "backend", "notebooks", "embeddings", "quality"]
 
 [tool.uv.sources]
 hidden-gem-config = { workspace = true }

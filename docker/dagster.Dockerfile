@@ -9,6 +9,7 @@ COPY pyproject.toml uv.lock* ./
 COPY config ./config
 COPY extraction ./extraction
 COPY embeddings ./embeddings
+COPY quality ./quality
 COPY orchestration ./orchestration
 COPY dbt_project ./dbt_project
 

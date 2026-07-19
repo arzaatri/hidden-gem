@@ -13,6 +13,8 @@ IGDB API (OAuth2 client-credentials)
    │  Python, invoked by a Dagster asset (extraction/)
    ▼
 MinIO  hidden-game/bronze/*.json   (raw, denormalized, 1 record/game)
+   │  ├─ Dagster asset check: quality/ge_bronze_expectations (Great Expectations,
+   │  │  non-blocking — validates the newest bronze batch, see "Data quality" below)
    │  dbt-duckdb staging + silver models (read straight from MinIO via S3/httpfs)
    ▼
 MinIO  hidden-game/silver/*.parquet (normalized: games, genres, themes,
@@ -93,8 +95,8 @@ least once first).
 `config/logging_setup.py` has one shared `setup_logging(service, packages)`,
 called once near the top of each process entrypoint:
 `orchestration/definitions.py` calls `setup_logging("datapull", ["extraction",
-"embeddings"])` (Dagster runs both packages in one process), and
-`backend/main.py` calls `setup_logging("webapp", ["backend"])`. It only
+"embeddings", "quality"])` (Dagster runs all three packages in one process),
+and `backend/main.py` calls `setup_logging("webapp", ["backend"])`. It only
 attaches handlers to those named top-level packages' loggers (not the root
 logger), so framework logging (Dagster, uvicorn) is left alone instead of
 being captured and reprinted in our format.
@@ -126,6 +128,32 @@ window next time. Because IGDB never returns the *same* game twice with an
 older `updated_at`, but the same game *can* reappear across multiple daily
 bronze files if it changes, `stg_games` (dbt) dedupes to the newest record per
 game before anything reaches silver/gold.
+
+## Data quality
+
+dbt schema-tests silver and gold (`not_null`, `unique`, `relationships`,
+`accepted_values` in `dbt_project/models/silver/silver.yml` and
+`.../gold/gold.yml`), but bronze — the raw IGDB pull — had no validation at
+all before it. `quality/` (its own uv workspace member, since Great
+Expectations + pandas are dependencies only it needs) fills that gap:
+
+- A Dagster **asset check** (`ge_bronze_expectations`, attached to
+  `bronze/raw_games`) reads the newest `bronze/*.json` batch straight from
+  MinIO and validates it against a Great Expectations suite
+  (`quality/src/quality/expectations.py`): rating/count ranges, non-negative
+  counts, and plausible `updated_at`/`first_release_date` timestamps (with a
+  generous floor on release date — IGDB has plenty of real pre-2000 games,
+  and future dates are valid for announced/upcoming titles).
+- **Non-blocking**: a failed expectation is logged and shows up in the
+  Dagster UI's Asset Checks tab, but dbt/embeddings still run — same
+  behavior as a failing dbt test today, appropriate for a personal project
+  where IGDB data is generally trustworthy.
+- **Great Expectations Data Docs** — GE's own local HTML report — is
+  regenerated on every check. Open
+  `quality/gx/uncommitted/data_docs/local_site/index.html` directly from the
+  host filesystem in a browser; no server needed. (`quality/gx/` is
+  GE's generated project directory — gitignored, like `dbt_project/target/`.)
+- Run standalone: `uv run --package quality python -m quality`.
 
 ## Recommendation logic
 
@@ -202,6 +230,9 @@ MINIO_ENDPOINT=localhost:9000 POSTGRES_HOST=localhost \
 # embeddings (also needs hostnames swapped — edit config/settings.yaml temporarily,
 # same as above, since it isn't Jinja-templated like dbt's profiles.yml)
 uv run --package embeddings python -m embeddings
+
+# quality (same hostname caveat)
+uv run --package quality python -m quality
 ```
 
 ## Known rough edge

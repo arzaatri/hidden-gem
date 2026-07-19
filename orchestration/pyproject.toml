@@ -7,6 +7,7 @@ dependencies = [
     "hidden-gem-config",
     "extraction",
     "embeddings",
+    "quality",
     "dagster>=1.9",
     "dagster-webserver>=1.9",
     "dagster-postgres>=0.25",
@@ -26,6 +27,7 @@ packages = ["src/orchestration"]
 hidden-gem-config = { workspace = true }
 extraction = { workspace = true }
 embeddings = { workspace = true }
+quality = { workspace = true }
 
 [tool.dagster]
 module_name = "orchestration.definitions"

@@ -18,6 +18,8 @@ TODO.txt
 logs/*
 !logs/.gitkeep
 
+quality/gx/
+
 .ipynb_checkpoints/
 
 notebooks/*.ipynb
