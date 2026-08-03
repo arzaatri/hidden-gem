@@ -4,17 +4,20 @@ etl:
   # Cap on games pulled per run. Keep small for local dev/testing; raise for a real run.
   max_games: 1000
   # A game is flagged as a "hidden gem" in the gold layer when its aggregated
-  # rating count falls below this percentile of all games' rating counts.
-  # Recomputed from the full dataset on every gold rebuild (dim_games is
-  # fully rebuilt each run), so it tracks the dataset's size/shape over time
-  # instead of drifting out of date like a fixed count would.
+  # rating count falls below this percentile of rating counts *among games
+  # released in the same year* (not the whole dataset) — otherwise older
+  # games look artificially "hidden" just because the industry's audience
+  # was smaller back then. Recomputed from the full dataset on every gold
+  # rebuild (dim_games is fully rebuilt each run), so it tracks the
+  # dataset's size/shape over time instead of drifting out of date like a
+  # fixed count would.
   hidden_gem_rating_count_percentile: 10
   # Daily refresh schedule (cron), used by the Dagster schedule.
   schedule_cron: "0 6 * * *"
 
 recommendation:
   # Number of hidden gems GemFinder returns per request.
-  hidden_gem_count: 5
+  hidden_gem_count: 6
   # Max games a user can select as input to "Mine for gems".
   max_selected_games: 5
   # Hard quality filter on aggregated_rating (critic score). Games below this

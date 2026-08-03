@@ -81,7 +81,9 @@ least once first).
 - **Tunables** (`config/settings.yaml`): `etl.max_games` (how many games to
   pull per run), `etl.hidden_gem_rating_count_percentile` (a game is a
   "hidden gem" if its `aggregated_rating_count` falls below this percentile
-  of all games' rating counts — recomputed from the full dataset on every
+  of rating counts *among games released in the same year* — per-year, not
+  dataset-wide, so older games aren't penalized for the industry's audience
+  having been smaller decades ago; recomputed from the full dataset on every
   gold rebuild, so it tracks the dataset as it grows instead of a fixed count
   going stale), bucket/schema names, the daily cron schedule,
   `recommendation.hidden_gem_count` and

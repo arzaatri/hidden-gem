@@ -21,13 +21,20 @@ keyword_agg as (
     group by gk.game_id
 ),
 
--- Recomputed from the full dataset every rebuild, so the hidden-gem cutoff
--- tracks the current dataset's rating-count distribution instead of a fixed
--- number that goes stale as the dataset grows.
+-- Per-release-year, not a single global cutoff: the industry's audience (and
+-- so rating-count volume) has grown enormously over time, so an old game
+-- would look artificially "hidden" against a cutoff dominated by modern
+-- releases. Comparing each game only to others from its own release year
+-- controls for that. Games with no release date are bucketed together
+-- (`is not distinct from` below treats null = null as a match) rather than
+-- dropped. Recomputed every rebuild, so cutoffs track the dataset as it grows.
 threshold as (
-    select percentile_cont({{ var('hidden_gem_rating_count_percentile') }} / 100.0)
-        within group (order by coalesce(aggregated_rating_count, 0)) as rating_count_cutoff
+    select
+        extract(year from first_release_date) as release_year,
+        percentile_cont({{ var('hidden_gem_rating_count_percentile') }} / 100.0)
+            within group (order by coalesce(aggregated_rating_count, 0)) as rating_count_cutoff
     from {{ ref('games') }}
+    group by extract(year from first_release_date)
 )
 
 select
@@ -51,4 +58,5 @@ from {{ ref('games') }} as games
 left join genre_agg on genre_agg.game_id = games.game_id
 left join theme_agg on theme_agg.game_id = games.game_id
 left join keyword_agg on keyword_agg.game_id = games.game_id
-cross join threshold
+left join threshold
+    on threshold.release_year is not distinct from extract(year from games.first_release_date)
