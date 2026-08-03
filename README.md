@@ -183,6 +183,13 @@ isn't wired into the API anymore. `ContentBasedGemFinder` is what
 - **Rating cutoff and `hidden_gems_only`** are hard SQL filters on the
   candidate pool (`GameRepository.get_candidate_pool`), entirely separate from
   the weighted score.
+- **`/api/recommend` returns a `match_score` and `signal_breakdown` per
+  game** (`backend/src/backend/content_scoring.py:weighted_contributions`),
+  not just the ranked games — the breakdown is each signal's weighted,
+  renormalized share of the score (summing to `match_score`), from whichever
+  of the up to 5 selected games produced that candidate's best match. The web
+  UI renders both as a "match %" badge and a per-dimension bar chart on each
+  result card.
 
 Swapping in a different/future model just means writing another `GemFinder`
 subclass and pointing `main.py`'s single `gem_finder = ...` line at it —

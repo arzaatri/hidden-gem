@@ -40,13 +40,23 @@ def normalize(raw_scores: list[float | None]) -> list[float | None]:
     return [None if score is None else (score - low) / (high - low) for score in raw_scores]
 
 
+def weighted_contributions(scores: dict[str, float | None], weights: dict[str, float]) -> dict[str, float]:
+    """Each available signal's share of the final score, with weights renormalized
+    to sum to 1 over just those — a missing signal doesn't count as a 0.
+
+    Sums to the same total as `weighted_average`; this is that computation
+    broken out per-signal, for displaying a match-score breakdown.
+    """
+    available = {name: score for name, score in scores.items() if score is not None}
+    if not available:
+        return {}
+    weight_total = sum(weights[name] for name in available)
+    if weight_total == 0:
+        return dict.fromkeys(available, 0.0)
+    return {name: weights[name] * score / weight_total for name, score in available.items()}
+
+
 def weighted_average(scores: dict[str, float | None], weights: dict[str, float]) -> float:
     """Weighted sum over whatever signals are available, with weights renormalized
     to sum to 1 over just those — a missing signal doesn't count as a 0."""
-    available = {name: score for name, score in scores.items() if score is not None}
-    if not available:
-        return 0.0
-    weight_total = sum(weights[name] for name in available)
-    if weight_total == 0:
-        return 0.0
-    return sum(weights[name] * score for name, score in available.items()) / weight_total
+    return sum(weighted_contributions(scores, weights).values())

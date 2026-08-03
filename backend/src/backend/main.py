@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.db import GameRepository
 from backend.gem_finder import ContentBasedGemFinder, GemFinder
-from backend.models import Game, GameSummary, RecommendRequest
+from backend.models import GameSummary, RecommendRequest, Recommendation
 from config.logging_setup import setup_logging
 from config.settings import load_settings
 
@@ -47,7 +47,7 @@ def search_games(q: str, limit: int = 10) -> list[GameSummary]:
 
 
 @app.post("/api/recommend")
-def recommend(request: RecommendRequest) -> list[Game]:
+def recommend(request: RecommendRequest) -> list[Recommendation]:
     max_selected = settings.recommendation.max_selected_games
     if len(request.game_ids) > max_selected:
         raise HTTPException(422, f"Select at most {max_selected} games.")
@@ -63,7 +63,7 @@ def recommend(request: RecommendRequest) -> list[Game]:
         "Recommend %s (hidden_gems_only=%s) -> %s",
         [game.game_id for game in games],
         request.hidden_gems_only,
-        [game.game_id for game in recommendations],
+        [r.game.game_id for r in recommendations],
     )
     return recommendations
 

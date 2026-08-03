@@ -97,13 +97,52 @@ function renderSelectedGames() {
   mineButton.disabled = selectedGames.length === 0;
 }
 
-function renderResults(games) {
+const SIGNAL_LABELS = {
+  genre: "Genre",
+  theme: "Theme",
+  keyword: "Keyword",
+  summary: "Summary",
+  storyline: "Storyline",
+  cover: "Cover art",
+  screenshots: "Screenshots",
+};
+
+function renderBreakdown(signalBreakdown) {
+  const list = document.createElement("ul");
+  list.className = "breakdown";
+  for (const [signal, contribution] of Object.entries(signalBreakdown)) {
+    const row = document.createElement("li");
+
+    const label = document.createElement("span");
+    label.className = "breakdown-label";
+    label.textContent = SIGNAL_LABELS[signal] ?? signal;
+    row.appendChild(label);
+
+    const bar = document.createElement("div");
+    bar.className = "breakdown-bar";
+    const fill = document.createElement("div");
+    fill.className = "breakdown-bar-fill";
+    fill.style.width = `${Math.round(contribution * 100)}%`;
+    bar.appendChild(fill);
+    row.appendChild(bar);
+
+    const value = document.createElement("span");
+    value.className = "breakdown-value";
+    value.textContent = `${Math.round(contribution * 100)}%`;
+    row.appendChild(value);
+
+    list.appendChild(row);
+  }
+  return list;
+}
+
+function renderResults(recommendations) {
   resultsSection.innerHTML = "";
-  if (games.length === 0) {
+  if (recommendations.length === 0) {
     resultsSection.innerHTML = "<p>No hidden gems found for that selection.</p>";
     return;
   }
-  for (const game of games) {
+  for (const { game, match_score, signal_breakdown } of recommendations) {
     const card = document.createElement("article");
     card.className = "game-card";
 
@@ -119,10 +158,20 @@ function renderResults(games) {
     const body = document.createElement("div");
     body.className = "game-card-body";
 
+    const header = document.createElement("div");
+    header.className = "game-card-header";
+
     const title = document.createElement("h3");
     const year = releaseYear(game.first_release_date);
     title.textContent = year ? `${game.name} (${year})` : game.name;
-    body.appendChild(title);
+    header.appendChild(title);
+
+    const score = document.createElement("span");
+    score.className = "match-score";
+    score.textContent = `${Math.round(match_score * 100)}% match`;
+    header.appendChild(score);
+
+    body.appendChild(header);
 
     const genres = document.createElement("div");
     genres.className = "genres";
@@ -132,6 +181,10 @@ function renderResults(games) {
     const summary = document.createElement("p");
     summary.textContent = game.summary ?? "";
     body.appendChild(summary);
+
+    if (Object.keys(signal_breakdown).length > 0) {
+      body.appendChild(renderBreakdown(signal_breakdown));
+    }
 
     card.appendChild(body);
     resultsSection.appendChild(card);

@@ -7,9 +7,14 @@ from abc import ABC, abstractmethod
 
 from config.settings import ContentWeights
 
-from backend.content_scoring import cosine_similarity, normalize, weighted_average, weighted_jaccard
+from backend.content_scoring import (
+    cosine_similarity,
+    normalize,
+    weighted_contributions,
+    weighted_jaccard,
+)
 from backend.db import GameEmbeddings, GameRepository
-from backend.models import Game
+from backend.models import Game, Recommendation
 
 
 class GemFinder(ABC):
@@ -19,7 +24,7 @@ class GemFinder(ABC):
         self.hidden_gem_count = hidden_gem_count
 
     @abstractmethod
-    def recommend(self, games: list[Game], hidden_gems_only: bool = True) -> list[Game]:
+    def recommend(self, games: list[Game], hidden_gems_only: bool = True) -> list[Recommendation]:
         """Returns up to `hidden_gem_count` games related to `games`.
 
         When `hidden_gems_only` is True (the default), only games flagged as
@@ -35,11 +40,12 @@ class MockGemFinder(GemFinder):
         super().__init__(hidden_gem_count)
         self._game_repository = game_repository
 
-    def recommend(self, games: list[Game], hidden_gems_only: bool = True) -> list[Game]:
+    def recommend(self, games: list[Game], hidden_gems_only: bool = True) -> list[Recommendation]:
         genres = {genre for game in games for genre in game.genres}
         exclude_ids = {game.game_id for game in games}
         candidates = self._game_repository.get_games_by_genres(genres, exclude_ids, hidden_gems_only)
-        return random.sample(candidates, k=min(self.hidden_gem_count, len(candidates)))
+        picks = random.sample(candidates, k=min(self.hidden_gem_count, len(candidates)))
+        return [Recommendation(game=game, match_score=0.0, signal_breakdown={}) for game in picks]
 
 
 class ContentBasedGemFinder(GemFinder):
@@ -60,7 +66,7 @@ class ContentBasedGemFinder(GemFinder):
         self._weights = weights.model_dump()
         self._game_repository = game_repository
 
-    def recommend(self, games: list[Game], hidden_gems_only: bool = True) -> list[Game]:
+    def recommend(self, games: list[Game], hidden_gems_only: bool = True) -> list[Recommendation]:
         query_ids = {game.game_id for game in games}
         candidates = self._game_repository.get_candidate_pool(
             query_ids, hidden_gems_only, self._rating_cutoff
@@ -75,13 +81,25 @@ class ContentBasedGemFinder(GemFinder):
         raw_signals = [self._raw_signals(query, candidate, idf, embeddings) for query, candidate in pairs]
         normalized_signals = _normalize_all_signals(raw_signals)
 
-        best_score: dict[int, float] = {}
+        # Best match per candidate is the highest-scoring query it was paired
+        # with (max, not average, across the up to 5 selected games) — keep
+        # that pair's breakdown too, since it's what explains the score shown.
+        best: dict[int, tuple[float, dict[str, float]]] = {}
         for (_, candidate), signals in zip(pairs, normalized_signals):
-            score = weighted_average(signals, self._weights)
-            best_score[candidate.game_id] = max(best_score.get(candidate.game_id, 0.0), score)
+            contributions = weighted_contributions(signals, self._weights)
+            score = sum(contributions.values())
+            if candidate.game_id not in best or score > best[candidate.game_id][0]:
+                best[candidate.game_id] = (score, contributions)
 
-        ranked = sorted(candidates, key=lambda candidate: best_score[candidate.game_id], reverse=True)
-        return ranked[: self.hidden_gem_count]
+        ranked = sorted(candidates, key=lambda candidate: best[candidate.game_id][0], reverse=True)
+        return [
+            Recommendation(
+                game=candidate,
+                match_score=best[candidate.game_id][0],
+                signal_breakdown=best[candidate.game_id][1],
+            )
+            for candidate in ranked[: self.hidden_gem_count]
+        ]
 
     @staticmethod
     def _raw_signals(
