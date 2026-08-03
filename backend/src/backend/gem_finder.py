@@ -7,12 +7,7 @@ from abc import ABC, abstractmethod
 
 from config.settings import ContentWeights
 
-from backend.content_scoring import (
-    cosine_similarity,
-    normalize,
-    weighted_contributions,
-    weighted_jaccard,
-)
+from backend.content_scoring import cosine_similarity, normalize, weighted_average, weighted_jaccard
 from backend.db import GameEmbeddings, GameRepository
 from backend.models import Game, Recommendation
 
@@ -83,13 +78,18 @@ class ContentBasedGemFinder(GemFinder):
 
         # Best match per candidate is the highest-scoring query it was paired
         # with (max, not average, across the up to 5 selected games) — keep
-        # that pair's breakdown too, since it's what explains the score shown.
+        # that pair's normalized signals too, for the breakdown shown in the UI.
+        # These are raw per-dimension similarity (0-1), not weighted
+        # contributions: a contribution is capped by that signal's weight
+        # (<=0.25 here), so it can never explain a high overall match_score
+        # on its own — the breakdown needs to show "how similar on this
+        # axis", not "how much of the total this axis accounted for".
         best: dict[int, tuple[float, dict[str, float]]] = {}
         for (_, candidate), signals in zip(pairs, normalized_signals):
-            contributions = weighted_contributions(signals, self._weights)
-            score = sum(contributions.values())
+            score = weighted_average(signals, self._weights)
             if candidate.game_id not in best or score > best[candidate.game_id][0]:
-                best[candidate.game_id] = (score, contributions)
+                available_signals = {name: value for name, value in signals.items() if value is not None}
+                best[candidate.game_id] = (score, available_signals)
 
         ranked = sorted(candidates, key=lambda candidate: best[candidate.game_id][0], reverse=True)
         return [

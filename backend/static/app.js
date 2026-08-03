@@ -142,9 +142,10 @@ function renderResults(recommendations) {
     resultsSection.innerHTML = "<p>No hidden gems found for that selection.</p>";
     return;
   }
-  for (const { game, match_score, signal_breakdown } of recommendations) {
+  recommendations.forEach(({ game, match_score, signal_breakdown }, index) => {
     const card = document.createElement("article");
     card.className = "game-card";
+    card.style.animationDelay = `${index * 60}ms`;
 
     const coverUrl = igdbCoverUrl(game.cover_image_id, "cover_big");
     if (coverUrl) {
@@ -174,8 +175,13 @@ function renderResults(recommendations) {
     body.appendChild(header);
 
     const genres = document.createElement("div");
-    genres.className = "genres";
-    genres.textContent = game.genres.join(", ");
+    genres.className = "tags";
+    for (const genre of game.genres) {
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = genre;
+      genres.appendChild(tag);
+    }
     body.appendChild(genres);
 
     const summary = document.createElement("p");
@@ -188,7 +194,7 @@ function renderResults(recommendations) {
 
     card.appendChild(body);
     resultsSection.appendChild(card);
-  }
+  });
 }
 
 searchInput.addEventListener("input", () => {
@@ -211,7 +217,7 @@ document.addEventListener("click", (event) => {
 });
 
 mineButton.addEventListener("click", async () => {
-  resultsSection.innerHTML = "<p>Mining...</p>";
+  resultsSection.innerHTML = '<div class="loading"><span class="gem-pulse">💎</span><p>Mining for gems...</p></div>';
   const response = await fetch("/api/recommend", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

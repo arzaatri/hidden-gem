@@ -47,9 +47,12 @@ class Recommendation(BaseModel):
     """A recommended game plus how `ContentBasedGemFinder` arrived at its score.
 
     `signal_breakdown` maps each of the 7 similarity signals (genre/theme/
-    keyword/summary/storyline/cover/screenshots) to its weighted contribution;
-    only signals with data for this pair are present, and the values sum to
-    `match_score`.
+    keyword/summary/storyline/cover/screenshots) to its own normalized
+    similarity score (0-1) — only signals with data for this pair are
+    present. This is raw per-dimension similarity, independent of that
+    signal's configured weight, so it does NOT sum to `match_score` (the
+    single blended, weighted score used for ranking) — it answers "how
+    similar on this axis", not "how much of the total this axis contributed".
     """
 
     game: Game

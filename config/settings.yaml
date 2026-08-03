@@ -14,7 +14,7 @@ etl:
 
 recommendation:
   # Number of hidden gems GemFinder returns per request.
-  hidden_gem_count: 2
+  hidden_gem_count: 5
   # Max games a user can select as input to "Mine for gems".
   max_selected_games: 5
   # Hard quality filter on aggregated_rating (critic score). Games below this
