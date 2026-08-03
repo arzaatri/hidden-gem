@@ -79,13 +79,17 @@ least once first).
 
 - **Secrets** (`.env`): IGDB creds, MinIO/Postgres creds.
 - **Tunables** (`config/settings.yaml`): `etl.max_games` (how many games to
-  pull per run), `etl.hidden_gem_rating_count_percentile` (a game is a
-  "hidden gem" if its `aggregated_rating_count` falls below this percentile
-  of rating counts *among games released in the same year* — per-year, not
-  dataset-wide, so older games aren't penalized for the industry's audience
-  having been smaller decades ago; recomputed from the full dataset on every
-  gold rebuild, so it tracks the dataset as it grows instead of a fixed count
-  going stale), bucket/schema names, the daily cron schedule,
+  pull per run), `etl.hidden_gem` (a game is a "hidden gem" if a weighted
+  blend of 3 obscurity signals — `aggregated_rating_count`, `follows`,
+  `hypes` — clears `obscurity_score_cutoff`; see
+  `dbt_project/models/gold/dim_games.sql` for the full design). Each signal
+  has its own independently tunable percentile `threshold`, compared
+  per-year rather than dataset-wide so older games aren't penalized for the
+  industry's audience having been smaller decades ago; `weights` (summing to
+  1) control how much each signal's obscurity flag contributes to the
+  blended score. Recomputed from the full dataset on every gold rebuild, so
+  it tracks the dataset as it grows instead of going stale. Bucket/schema
+  names, the daily cron schedule,
   `recommendation.hidden_gem_count` and
   `recommendation.max_selected_games` (the web app's `N` and the 5-game cap),
   `recommendation.rating_cutoff` (hard quality filter on `aggregated_rating`;

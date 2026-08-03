@@ -17,9 +17,43 @@ DEFAULT_SETTINGS_YAML = Path(__file__).parent / "settings.yaml"
 DEFAULT_ENV_FILE = Path(__file__).parent.parent / ".env"
 
 
+class HiddenGemThresholds(BaseModel):
+    """Per-signal percentile cutoffs: a game is "obscure" on a given signal
+    if it's in the bottom N% of its release year for that signal."""
+
+    aggregated_rating_count_percentile: float
+    follows_percentile: float
+    hypes_percentile: float
+
+
+class HiddenGemWeights(BaseModel):
+    """How much each signal's obscurity flag contributes to the blended
+    obscurity score — must sum to 1."""
+
+    aggregated_rating_count: float
+    follows: float
+    hypes: float
+
+    @model_validator(mode="after")
+    def _weights_sum_to_one(self) -> "HiddenGemWeights":
+        total = sum(self.model_dump().values())
+        if abs(total - 1.0) > 1e-6:
+            raise ValueError(f"etl.hidden_gem.weights must sum to 1, got {total}")
+        return self
+
+
+class HiddenGemConfig(BaseModel):
+    """A game is a "hidden gem" if its weighted obscurity score (a per-year,
+    per-signal blend of rating count / follows / hypes) clears this cutoff."""
+
+    thresholds: HiddenGemThresholds
+    weights: HiddenGemWeights
+    obscurity_score_cutoff: float
+
+
 class EtlConfig(BaseModel):
     max_games: int
-    hidden_gem_rating_count_percentile: float
+    hidden_gem: HiddenGemConfig
     schedule_cron: str
 
 

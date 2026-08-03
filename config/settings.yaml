@@ -3,15 +3,29 @@
 etl:
   # Cap on games pulled per run. Keep small for local dev/testing; raise for a real run.
   max_games: 1000
-  # A game is flagged as a "hidden gem" in the gold layer when its aggregated
-  # rating count falls below this percentile of rating counts *among games
-  # released in the same year* (not the whole dataset) — otherwise older
-  # games look artificially "hidden" just because the industry's audience
-  # was smaller back then. Recomputed from the full dataset on every gold
-  # rebuild (dim_games is fully rebuilt each run), so it tracks the
-  # dataset's size/shape over time instead of drifting out of date like a
-  # fixed count would.
-  hidden_gem_rating_count_percentile: 10
+  # A game is flagged as a "hidden gem" in the gold layer based on a blended
+  # obscurity score over 3 signals: aggregated_rating_count, follows, hypes.
+  # For each signal, a game is "obscure" if it's in the bottom N% of that
+  # signal *among games released in the same year* (not the whole dataset —
+  # otherwise older games look artificially "hidden" just because the
+  # industry's audience was smaller back then). Recomputed from the full
+  # dataset on every gold rebuild, so cutoffs track the dataset as it grows.
+  hidden_gem:
+    # Per-signal percentile cutoffs — independently tunable.
+    thresholds:
+      aggregated_rating_count_percentile: 10
+      follows_percentile: 15
+      hypes_percentile: 20
+    # How much each signal's obscurity flag contributes to the blended
+    # score below — must sum to 1.
+    weights:
+      aggregated_rating_count: 0.5
+      follows: 0.3
+      hypes: 0.2
+    # A game is a hidden gem if its weighted obscurity score (the weighted
+    # sum of the 3 obscurity flags above) clears this cutoff — 0.5 means a
+    # weighted majority of the configured signals must call it obscure.
+    obscurity_score_cutoff: 0.5
   # Daily refresh schedule (cron), used by the Dagster schedule.
   schedule_cron: "0 6 * * *"
 

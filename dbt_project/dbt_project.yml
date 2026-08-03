@@ -7,11 +7,20 @@ target-path: "target"
 clean-targets: ["target"]
 
 vars:
-  # Default percentile for the gold `hidden_gem` flag (games below this
-  # percentile of aggregated_rating_count are "hidden gems"). The Dagster
-  # pipeline overrides this from config/settings.yaml at runtime so there's
-  # one source of truth; this default just lets `dbt build` work standalone.
-  hidden_gem_rating_count_percentile: 10
+  # Default hidden_gem obscurity config (see config/settings.yaml for the
+  # authoritative docs). The Dagster pipeline overrides this from
+  # config/settings.yaml at runtime so there's one source of truth; this
+  # default just lets `dbt build` work standalone.
+  hidden_gem:
+    thresholds:
+      aggregated_rating_count_percentile: 10
+      follows_percentile: 15
+      hypes_percentile: 20
+    weights:
+      aggregated_rating_count: 0.5
+      follows: 0.3
+      hypes: 0.2
+    obscurity_score_cutoff: 0.5
 
 models:
   hidden_gem:
