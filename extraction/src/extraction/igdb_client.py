@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 # (sort id asc) and to give every bronze record a stable primary key.
 _PAGINATION_FIELD = "id"
 
+# IGDB category enum: 0 = main_game. Excludes dlc_addon, expansion, bundle,
+# standalone_expansion, mod, episode, season, remake, remaster, etc.
+_BASE_GAME_CATEGORY = 0
+
 
 def _with_all_fields(game: dict[str, Any], fields: list[str]) -> dict[str, Any]:
     """Fills in `None` for any requested field IGDB omitted from this record.
@@ -50,7 +54,7 @@ class IgdbClient:
             limit = min(page_size, remaining)
             query = (
                 f"fields {','.join(fields)};\n"
-                f"where updated_at > {int(updated_after.timestamp())};\n"
+                f"where updated_at > {int(updated_after.timestamp())} & category = {_BASE_GAME_CATEGORY};\n"
                 f"sort id asc;\n"
                 f"limit {limit};\n"
                 f"offset {offset};"
